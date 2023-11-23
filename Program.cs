@@ -326,15 +326,27 @@ class Human : ISubscriber
         Console.WriteLine($"{obj} - shit");
     }
 }*/
+/*
+DNSManager manager = new DNSManager();
+Human human1 = new Human();
+Human human2 = new Human();
+manager.HotInfoChanged += human1.HotInfoReceive;
+manager.HotInfoChanged += human2.HotInfoReceive;
+manager.HotInfoReceived += human2.test;
+manager.GenerateNewInfo(100);
+manager.HotInfoChanged -= human1.HotInfoReceive;
+//human1.CheckInfo(manager); // может быть не может так делать со всеми подписчиками 
+manager.GenerateNewInfo(1000);
+//human2.CheckInfo(manager);
 
 
 class DNSManager
 {
     public string HotInfo { get; set; }// предложение недели
 
-    public void GenerateNewInfo()
+    public void GenerateNewInfo(int price)
     {
-        HotInfo = "2 SSD по цене 3х!";
+        HotInfo = $"2 SSD по цене 3х! {price}$";
         // запуск события с проверкой, что подписчики
         // существуют (?.)
         HotInfoChanged?.Invoke(this, HotInfo);
@@ -344,17 +356,69 @@ class DNSManager
     // внутри которого оно объявлено
 
     public event EventHandler<string> HotInfoChanged;
+    public event Func<object?, int> HotInfoReceived;    
 }
 
 class Human
 {
-    public Human(DNSManager dNSManager)
+    internal void HotInfoReceive(object? sender, string e)
     {
-        dNSManager.HotInfoChanged += DNSManager_HotInfoChanged;
+        Console.WriteLine($"Получение инфы: {e}");
     }
 
-    private void DNSManager_HotInfoChanged(object? sender, string arg)
+    internal int test(object? s)
     {
-        Console.WriteLine($"Ура. Новое дерьмовое предложение: {arg}"); 
+        throw new NotImplementedException();
+    }
+}*/
+
+// делегаты - ссылки на методы, которые можно использовать
+// для вызова группы методов за одну инструкцию
+// делегаты объявляются в пространстве имен и в классах
+// делегат сам по себе ничего не делает
+// он вызывает на исполнение методы, на которые он ссылается
+namespace Test
+{
+    public delegate int Compute(int x, int y);
+
+    class Program
+    {
+        static void Main()
+        {
+            // создание делегата, который указывает (ссылается)
+            // на метод Sum класса Program
+            Compute compute = Sum;
+            // вызов метода Sum через делегат
+            int result = compute(10, 10);
+            Console.WriteLine(result);
+            // подписываем на делегат второй метод
+            compute += Mult;
+            result = compute(10, 10); // получаем результат
+            // последнего вызванного метода
+            Console.WriteLine(result);
+            // тот же синтаксис, что для вызова события 
+            // (потому что события это замаскированные делегаты)
+            // (тут проверка на то, что у делегате есть
+            // подписчики (делегат ссылается на методы))
+            Compute computeNull = null;
+            //int? res = computeNull(10, 10);// тут будет ошибка
+            int ? res = computeNull?.Invoke(10, 10);// тут ок
+        }
+
+        static int Sum(int x, int y)
+        {
+            Console.WriteLine("Вызов метода Sum");
+            return x + y;
+        }
+        static int Mult (int x, int y)
+        {
+            Console.WriteLine("Вызов метода Mult");
+            return x * y;
+        }
+    }
+
+    class Test
+    {
+        private delegate int Compute1(int x, int y);
     }
 }
